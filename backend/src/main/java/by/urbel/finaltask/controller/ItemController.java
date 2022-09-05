@@ -1,6 +1,5 @@
 package by.urbel.finaltask.controller;
 
-import by.urbel.finaltask.domain.item.Item;
 import by.urbel.finaltask.dto.requests.ItemRequest;
 import by.urbel.finaltask.dto.response.ItemResponse;
 import by.urbel.finaltask.search.SearchService;
@@ -16,7 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/items")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class ItemController {
     private final ItemService itemService;
     private final SearchService searchService;
@@ -30,12 +28,12 @@ public class ItemController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(itemService.getById(id));
+        return ResponseEntity.ok(itemService.findById(id));
     }
 
     @GetMapping
     public ResponseEntity<?> findAllFromCollection(@RequestParam Long collectionId) {
-        return ResponseEntity.ok(itemService.getAll(collectionId));
+        return ResponseEntity.ok(itemService.findAll(collectionId));
     }
 
     @DeleteMapping("/{id}")
@@ -49,5 +47,15 @@ public class ItemController {
     public ResponseEntity<?> search(@RequestParam String query){
         List<ItemResponse> items = searchService.search(query);
         return ResponseEntity.ok(items);
+    }
+
+    @GetMapping("/last-added")
+    public ResponseEntity<?> findLastAdded(){
+        return ResponseEntity.ok(itemService.findLastAdded());
+    }
+
+    @GetMapping("find-by-tag")
+    public ResponseEntity<?> findAllByTag(@RequestParam String tag){
+        return ResponseEntity.ok(itemService.findAllByTag(tag));
     }
 }

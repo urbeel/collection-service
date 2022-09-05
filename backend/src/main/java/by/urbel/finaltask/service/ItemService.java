@@ -25,6 +25,7 @@ import java.util.List;
 public class ItemService {
     private final ItemRepository itemRepository;
     private final CollectionRepository collectionRepository;
+    private final TagService tagService;
     private final TagRepository tagRepository;
     private final FieldTypeRepository fieldTypeRepository;
     private final ItemMapper itemMapper;
@@ -34,6 +35,7 @@ public class ItemService {
     public Item create(ItemRequest itemRequest) {
         Item item = itemMapper.map(itemRequest);
         item.setCollection(collectionRepository.findById(itemRequest.getCollectionId()).orElseThrow());
+        item.setTags(tagService.saveTags(itemRequest.getTags()));
         if (item.getFields() != null) {
             item.getFields().forEach(field -> {
                 field.setType(fieldTypeRepository.findById(field.getType().getId()).orElseThrow());
@@ -42,19 +44,36 @@ public class ItemService {
         return itemRepository.save(item);
     }
 
-    public ItemResponse getById(Long id) {
+    public ItemResponse findById(Long id) {
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         item.getComments().sort(Comparator.comparing(Comment::getCreatedDate).reversed());
         return itemMapper.map(item);
     }
 
-    public List<Item> getAll(Long collectionId) {
+    public List<ItemResponse> findAll(Long collectionId) {
         List<Item> items = itemRepository.findAllByCollectionId(collectionId);
         if (items.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-        return items;
+        return items.stream().map(itemMapper::map).toList();
+    }
+
+    public List<ItemResponse> findLastAdded() {
+        List<Item> items = itemRepository.findAllByOrderByCreatedDateDesc();
+        if (items.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return items.stream().map(itemMapper::map).toList();
+    }
+
+    public List<ItemResponse> findAllByTag(String tag) {
+        List<Item> items = tagRepository.findByName(tag)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)).getItems();
+        if (items.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return items.stream().map(itemMapper::map).toList();
     }
 
     public void delete(Long id) {

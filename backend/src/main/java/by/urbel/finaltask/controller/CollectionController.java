@@ -17,7 +17,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/collections")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class CollectionController {
     private final CollectionService collectionService;
     private final SearchService searchService;
@@ -42,11 +41,8 @@ public class CollectionController {
 
     @GetMapping("/top5")
     public ResponseEntity<List<CollectionResponse>> findTop5ByItemsNumber() {
-//        throw new TokenRefreshException("token","message");
         return ResponseEntity.ok(collectionService.findTopNCollectionsByItemsNumber(5));
     }
-
-    // TODO: 24.08.2022 update method?
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','USER')")

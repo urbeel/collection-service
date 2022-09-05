@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.transaction.Transactional;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -28,8 +29,7 @@ public class RefreshTokenService {
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")));
         refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
         refreshToken.setToken(UUID.randomUUID().toString());
-        refreshToken = refreshTokenRepository.save(refreshToken);
-        return refreshToken;
+        return refreshTokenRepository.save(refreshToken);
     }
 
     public RefreshToken findByToken(String token){
@@ -41,10 +41,10 @@ public class RefreshTokenService {
         if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
             refreshTokenRepository.delete(token);
             throw new RuntimeException("Refresh token was expired. Please make a new signin request");
-//            throw new TokenRefreshException(token.getToken(), "Refresh token was expired. Please make a new signin request");
         }
     }
 
+    @Transactional
     public void deleteByUsername(String username){
         refreshTokenRepository.deleteByUserUsername(username);
     }

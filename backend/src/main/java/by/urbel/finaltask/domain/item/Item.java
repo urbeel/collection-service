@@ -2,6 +2,7 @@ package by.urbel.finaltask.domain.item;
 
 import by.urbel.finaltask.domain.Collection;
 import by.urbel.finaltask.domain.Comment;
+import by.urbel.finaltask.domain.Like;
 import by.urbel.finaltask.domain.Tag;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
@@ -25,7 +26,12 @@ public class Item {
     @Column(nullable = false)
     @FullTextField
     private String name;
-    @ManyToMany()
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "items_tags",
+            joinColumns = {@JoinColumn(name = "item_id")},
+            inverseJoinColumns = {@JoinColumn(name = "tag_id")}
+    )
     private List<Tag> tags;
     @Column
     private Date createdDate;
@@ -37,6 +43,8 @@ public class Item {
     private List<ItemField> fields;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "item", fetch = FetchType.EAGER)
     private List<Comment> comments;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "item",fetch = FetchType.LAZY)
+    private List<Like> likes;
     @PrePersist
     private void addCreatedDate() {
         this.createdDate = new Date();

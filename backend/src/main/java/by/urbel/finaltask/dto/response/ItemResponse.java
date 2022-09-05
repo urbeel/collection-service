@@ -12,6 +12,8 @@ public class ItemResponse {
     private String name;
     private List<String> tags;
     private Date createdDate;
+    private String collectionName;
+    private String author;
     private List<ItemField> fields;
     private List<CommentResponse> comments;
 }

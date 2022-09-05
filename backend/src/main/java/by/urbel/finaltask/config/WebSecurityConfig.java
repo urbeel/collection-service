@@ -18,8 +18,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -43,11 +46,11 @@ public class WebSecurityConfig {
         http.csrf().disable();
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.cors().and().authorizeRequests()
-                .antMatchers(HttpMethod.GET,"/api/users").hasRole(ROLE_ADMIN)
+                .antMatchers(HttpMethod.GET, "/api/users").hasRole(ROLE_ADMIN)
                 .antMatchers(HttpMethod.POST, "/api/collections").authenticated()
                 .antMatchers(HttpMethod.DELETE, "/api/collections/*").authenticated()
                 .anyRequest().permitAll();
-        http.addFilterBefore(customAuthenticationFilter(),UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(customAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
@@ -61,16 +64,4 @@ public class WebSecurityConfig {
     public CustomAuthenticationFilter customAuthenticationFilter() {
         return new CustomAuthenticationFilter(jwtTokenUtil);
     }
-
-//    @Bean
-//    CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration config = new CorsConfiguration();
-//        config.setAllowedOrigins(Arrays.asList("http://localhost:3000","http://localhost:8080")); //only requests from these origins (URL of the web page) are accepted
-//        config.setAllowedMethods(Arrays.asList("GET","POST"));
-//        config.setAllowedHeaders(Arrays.asList("content-type"));
-//        config.setAllowCredentials(true);   //this is important in preflight request (OPTIONS) to tell the browser, that it can send credentials, e.g. cookies along the subsequent request
-//        UrlBasedCorsConfigurationSource configSource = new UrlBasedCorsConfigurationSource();
-//        configSource.registerCorsConfiguration("/**", config);
-//        return configSource;
-//    }
 }

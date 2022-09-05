@@ -25,7 +25,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        if (request.getServletPath().equals("/api/auth/login")) {
+        if (request.getServletPath().equals("/api/auth/login") ||request.getServletPath().equals("/api/auth/registration")) {
             filterChain.doFilter(request, response);
         } else {
             String jwt = parseJwt(request);

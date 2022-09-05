@@ -23,7 +23,7 @@ public class Collection {
     private String topic;
     @Column()
     private String imageUrl;
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
     @JoinColumn(name = "user_id")
     private User owner;
     @OneToMany(targetEntity = Item.class, cascade = CascadeType.ALL)

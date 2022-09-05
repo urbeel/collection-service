@@ -6,9 +6,8 @@ import by.urbel.finaltask.domain.user.Role;
 import by.urbel.finaltask.domain.user.User;
 import by.urbel.finaltask.dto.requests.SignInRequest;
 import by.urbel.finaltask.dto.requests.SignUpRequest;
-import by.urbel.finaltask.dto.response.JwtResponse;
-import by.urbel.finaltask.exception.EmailAlreadyExistsException;
-import by.urbel.finaltask.exception.UsernameAlreadyExistsException;
+import by.urbel.finaltask.dto.response.LoginResponse;
+import by.urbel.finaltask.dto.response.UserResponse;
 import by.urbel.finaltask.mapper.UserMapper;
 import by.urbel.finaltask.repository.UserRepository;
 import by.urbel.finaltask.security.jwt.JwtTokenUtil;
@@ -20,6 +19,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -42,8 +42,10 @@ public class AuthService {
 
     @Value("${jwt.refresh.token.expired}")
     private Long refreshTokenDurationMs;
+    @Value("${CLIENT_URL}")
+    private String clientUrl;
 
-    public JwtResponse login(SignInRequest signInRequest, HttpServletResponse response) {
+    public LoginResponse login(SignInRequest signInRequest, HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(signInRequest.getUsername(), signInRequest.getPassword()));
         User user = userRepository.findByUsername(signInRequest.getUsername())
@@ -51,8 +53,9 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtTokenUtil.generateAccessToken(user);
         RefreshToken refreshToken = refreshTokenService.create(authentication.getName());
-        setRefreshTokenToCookies(refreshToken.getToken(),response);
-        return new JwtResponse(jwt, refreshToken.getToken(), signInRequest.getUsername());
+        setRefreshTokenToCookies(refreshToken.getToken(), response);
+        UserResponse userResponse = userMapper.userToUserResponse(user);
+        return new LoginResponse(jwt, userResponse);
     }
 
     public void register(SignUpRequest signUpRequest) {
@@ -64,31 +67,34 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    public void logout() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        refreshTokenService.deleteByUsername(securityContext.getAuthentication().getName());
+        securityContext.setAuthentication(null);
+    }
+
     private void checkExistence(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new EmailAlreadyExistsException("Email is already used.");
-        }
         if (userRepository.existsByUsername(user.getUsername())) {
-            throw new UsernameAlreadyExistsException("Username is already used.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is already used.");
         }
     }
 
-    public JwtResponse updateAccessToken(String refreshToken) {
+    public LoginResponse updateAccessToken(String refreshToken) {
         RefreshToken refreshTokenEntity = refreshTokenService.findByToken(refreshToken);
         refreshTokenService.verifyExpiration(refreshTokenEntity);
         String accessToken = jwtTokenUtil.generateAccessToken(refreshTokenEntity.getUser());
-        return new JwtResponse(accessToken, refreshToken, refreshTokenEntity.getUser().getUsername());
+        UserResponse user = userMapper.userToUserResponse(refreshTokenEntity.getUser());
+        return new LoginResponse(accessToken, user);
     }
 
-    public void setRefreshTokenToCookies(String refreshToken,HttpServletResponse response){
-//        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
-//                .domain("localhost")
-//                .path("/")
-//                .maxAge(TimeUnit.MILLISECONDS.toSeconds(refreshTokenDurationMs))
-//                .build();
-        Cookie yourCookie = new Cookie("refreshToken", refreshToken);
-        response.addCookie(yourCookie);
-
-//        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+    private void setRefreshTokenToCookies(String refreshToken, HttpServletResponse response) {
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .domain(clientUrl.replace("https://",""))
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(TimeUnit.MILLISECONDS.toSeconds(refreshTokenDurationMs))
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
     }
 }

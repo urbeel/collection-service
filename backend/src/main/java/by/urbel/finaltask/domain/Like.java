@@ -5,6 +5,7 @@ import by.urbel.finaltask.domain.user.User;
 import lombok.*;
 
 import javax.persistence.*;
+import java.lang.reflect.Member;
 
 @Entity
 @Table(
@@ -19,7 +20,7 @@ public class Like {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "user_id")
     private User user;
     @ManyToOne

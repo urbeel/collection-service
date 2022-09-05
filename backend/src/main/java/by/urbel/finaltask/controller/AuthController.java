@@ -2,24 +2,25 @@ package by.urbel.finaltask.controller;
 
 import by.urbel.finaltask.dto.requests.SignInRequest;
 import by.urbel.finaltask.dto.requests.SignUpRequest;
-import by.urbel.finaltask.dto.response.JwtResponse;
+import by.urbel.finaltask.dto.response.LoginResponse;
 import by.urbel.finaltask.service.AuthService;
+import by.urbel.finaltask.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import java.util.Arrays;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @Slf4j
 public class AuthController {
     private final AuthService authService;
@@ -39,11 +40,17 @@ public class AuthController {
         if (bindingResult.hasErrors()){
             return ResponseEntity.badRequest().body(bindingResult.getFieldError().getDefaultMessage());
         }
-        JwtResponse jwtResponse = authService.login(signInRequest, response);
-        return ResponseEntity.ok(jwtResponse);
+        LoginResponse loginResponse = authService.login(signInRequest, response);
+        return ResponseEntity.ok(loginResponse);
     }
 
-    @GetMapping("/refreshjwt")
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.OK)
+    public void logout(){
+        authService.logout();
+    }
+
+    @GetMapping("/refresh-jwt")
     public ResponseEntity<?> updateAccessToken(@CookieValue String refreshToken){
         return ResponseEntity.ok(authService.updateAccessToken(refreshToken));
     }

@@ -14,7 +14,7 @@ public class Comment {
     private Long id;
     @Column
     private Date createdDate;
-    @ManyToOne(targetEntity = User.class, cascade = CascadeType.ALL)
+    @ManyToOne(targetEntity = User.class, cascade = {CascadeType.MERGE})
     private User user;
     @ManyToOne(cascade = CascadeType.ALL)
     private Item item;

@@ -10,6 +10,7 @@ import org.mapstruct.factory.Mappers;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     @Mapping(target = "username", source = "username")
+    @Mapping(target = "roles", expression = "java(user.getRoles().stream().map(role->role.getName().toString()).toList())")
     UserResponse userToUserResponse(User user);
     @Mapping(target = "username", source = "username")
     User signUpRequestToUser(SignUpRequest signUpRequest);
