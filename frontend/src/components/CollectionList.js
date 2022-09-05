@@ -4,7 +4,7 @@ import CollectionCard from "./CollectionCard";
 
 const CollectionList = (props) => {
     const {collections, columns} = props;
-    if (!collections) {
+    if (!collections || !Array.isArray(collections)) {
         return (
             <Box p={2} textAlign='center'>
                 <Typography variant='h5'>

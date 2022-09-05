@@ -1,16 +1,22 @@
 import React, {useEffect, useState} from 'react';
 import {Container, Grid} from "@mui/material";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import Button from "@mui/material/Button";
 import CollectionList from "../components/CollectionList";
 import api from "../http";
+import useAuth from "../hooks/useAuth";
 
 const Profile = () => {
     const [collections, setCollections] = useState([]);
+    const navigate = useNavigate();
+    const {isAuth} = useAuth();
     useEffect(() => {
+        if (!isAuth){
+            navigate("/");
+        }
         api.get("/collections", {
             params: {
-                "username": localStorage.getItem("username"),
+                "username": sessionStorage.getItem("username"),
             }
         }).then((response) => {
                 setCollections(response.data);
@@ -18,7 +24,7 @@ const Profile = () => {
         ).catch((error) => {
             console.log(error);
         })
-    }, [])
+    }, [isAuth, navigate])
 
     return (
         <Container>

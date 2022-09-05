@@ -1,46 +1,35 @@
-import {createSlice, createAsyncThunk} from "@reduxjs/toolkit";
-import api from "../../http";
-
-export const fetchLogin = createAsyncThunk('auth/fetchLogin', async (params) => {
-    const {data} = await api.post('/auth/login', params).then()
-    return data;
-})
+import {createSlice} from "@reduxjs/toolkit";
 
 const initialState = {
-    data: null,
-    status: 'loading',
+    username: null,
+    accessToken: null,
+    roles: [],
 }
 
 const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
+        login: (state, action) => {
+            state.username = action.payload.username;
+            state.accessToken = action.payload.accessToken;
+            state.roles = action.payload.roles;
+        },
         logout: (state) => {
-            state.data = null;
+            state.username = null;
+            state.accessToken = null;
+            state.roles = null;
         },
-        authFromStorage: (state) => {
-            state.data = window.localStorage.getItem('accessToken');
+        authFromSession: (state) => {
+            state.username = sessionStorage.getItem('username');
+            state.accessToken = sessionStorage.getItem('accessToken');
+            state.roles = sessionStorage.getItem('roles');
         },
-    },
-    extraReducers: {
-        [fetchLogin.pending]: (state) => {
-            state.status = 'loading';
-            state.data = null;
-        },
-        [fetchLogin.fulfilled]: (state, action) => {
-            state.status = 'loaded';
-            state.data = action.payload;
-        },
-        [fetchLogin.rejected]: (state) => {
-            state.status = 'error';
-            state.data = null;
-        }
     }
 })
 
-export const selectIsAuth = (state) => Boolean(state.auth.data)
+export const selectAuth = (state) => state.auth;
 
-export const {logout} = authSlice.actions;
-export const {authFromStorage} = authSlice.actions;
+export const {login, logout, authFromSession} = authSlice.actions;
 
 export const authReducer = authSlice.reducer;

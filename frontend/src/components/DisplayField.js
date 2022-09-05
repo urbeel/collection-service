@@ -19,13 +19,13 @@ const DisplayField = (props) => {
                 }
             case "NUMBER":
                 return field.numberValue;
-            case "DATE": {
+            case "DATE":
                 if (moment(field.dateValue).isValid()) {
                     return moment(field.dateValue).format("DD.MM.YYYY");
                 }
-            }
+                break;
             default:
-                return "asdasd";
+                return "";
         }
     }
 

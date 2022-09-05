@@ -7,22 +7,21 @@ import Button from "@mui/material/Button";
 import {useLocation, useNavigate} from "react-router-dom";
 import GenerateField from "../../service/GenerateField";
 import {useForm} from "react-hook-form";
-import axios from "../../http";
 import CreatableSelect from "react-select/creatable";
 import api from "../../http";
 
 const NewItem = () => {
     const location = useLocation();
-    const [tagsFromDB, setTagsFromDB] = useState([]);
     const navigate = useNavigate();
-    const fields = location.state.fields;
+    const [tagsFromDB, setTagsFromDB] = useState([]);
+    const [fields, setFields] = useState([]);
     const [tags, setTags] = useState([]);
     const {register, handleSubmit, setValue} = useForm();
 
     const onSubmit = (item) => {
         item.tags = tags;
         item.collectionId = location.state.collectionId;
-        axios.post("/items", item).then(() => {
+        api.post("/items", item).then(() => {
                 navigate("/collections/" + item.collectionId);
             }
         ).catch((reason) => {
@@ -31,14 +30,29 @@ const NewItem = () => {
     }
 
     const handleChange = (newValue) => {
-        setTags(newValue.map(element=>element.value));
+        setTags(newValue.map(element => element.value));
     };
 
-    useEffect(()=>{
-        api.get("/tags").then((response)=>{
-            setTagsFromDB(response.data);
-        })
-    },[])
+    useEffect(() => {
+        if (location.state) {
+            setFields(location.state.fields);
+        } else {
+            navigate("/");
+        }
+    }, []);
+
+    useEffect(() => {
+        if (location.state) {
+            api.get("/tags")
+                .then((response) => {
+                    const arr = response.data.map(el => ({
+                        label: el,
+                        value: el,
+                    }))
+                    setTagsFromDB(arr);
+                })
+        }
+    }, []);
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -52,7 +66,7 @@ const NewItem = () => {
                     <Grid item xs={12}>
                         <TextField
                             sx={{mb: 2}}
-                            label="Item name"
+                            label="ItemCard name"
                             fullWidth
                             {...register('name')}
                         />

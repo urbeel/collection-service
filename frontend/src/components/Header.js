@@ -3,19 +3,27 @@ import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Button from "@mui/material/Button";
-import {Link} from "react-router-dom";
-import {useDispatch, useSelector} from "react-redux";
-import {logout, selectIsAuth} from "../redux/slices/authSlice";
+import {Link, useNavigate} from "react-router-dom";
+import {useDispatch} from "react-redux";
+import {logout} from "../redux/slices/authSlice";
 import SearchBar from "./SearchBar";
+import useAuth from "../hooks/useAuth";
+import api from "../http";
 
 const Header = () => {
-    const isAuth = useSelector(selectIsAuth);
+    const {isAuth, roles} = useAuth();
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
-    const onClickLogout = () => {
+    const logoutHandler = () => {
         if (window.confirm('Are you sure?')) {
-            dispatch(logout());
-            window.localStorage.removeItem('accessToken');
+            api.post("auth/logout").then(()=>{
+                dispatch(logout());
+                sessionStorage.removeItem('accessToken');
+                sessionStorage.removeItem('username');
+                sessionStorage.removeItem('roles');
+                navigate("/");
+            }).catch(console.error);
         }
     }
 
@@ -27,6 +35,11 @@ const Header = () => {
                         <Button component={Link} variant='contained' to='/'>
                             HOME
                         </Button>
+                        {(roles && roles.includes("ROLE_ADMIN")) &&
+                            <Button component={Link} variant='contained' to='/admin'>
+                                ADMIN
+                            </Button>
+                        }
                     </Box>
                     {isAuth ?
                         (
@@ -35,7 +48,7 @@ const Header = () => {
                                         sx={{margin: 1}}>
                                     Profile
                                 </Button>
-                                <Button color="error" onClick={onClickLogout} variant="contained"
+                                <Button color="error" onClick={logoutHandler} variant="contained"
                                         sx={{margin: 1}}>
                                     LogOut
                                 </Button>
@@ -52,7 +65,7 @@ const Header = () => {
                             </>
                         )
                     }
-                        <SearchBar/>
+                    <SearchBar/>
                 </Toolbar>
             </AppBar>
         </Box>

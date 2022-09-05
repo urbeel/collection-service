@@ -13,10 +13,11 @@ const CollectionCard = (props) => {
     return (
         <Grid item xs={12} md={3}>
             <Card sx={{margin: 'auto', height: '100%'}}>
-                <CardActionArea sx={{height: '100%'}} onClick={collectionClickHandler}>
+                <CardActionArea onClick={collectionClickHandler}>
                     <CardMedia
+                        sx={{mt:0}}
                         component="img"
-                        height="140"
+                        height="150"
                         image={imageUrl}
                         alt="green iguana"
                     />

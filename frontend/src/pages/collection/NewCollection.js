@@ -4,20 +4,21 @@ import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import {useForm} from "react-hook-form";
-import axios from "../../http";
 import {useNavigate} from "react-router-dom";
 import {FormControl, Grid, InputLabel, MenuItem, Select} from "@mui/material";
 import CustomFieldType from "../../components/CustomFieldType";
+import api from "../../http";
 
 const NewCollection = () => {
     const [count, setCount] = useState(0);
+    const [fileName, setFileName] = useState(null);
     let navigate = useNavigate();
-    const {register, handleSubmit} = useForm();
+    const {register, unregister, handleSubmit} = useForm();
 
     const onSubmit = (data) => {
         const file = data.imageFiles[0];
         if (file) {
-            axios.post("/upload-file",
+            api.post("/upload-file",
                 {
                     "imageFile": file,
                 },
@@ -31,7 +32,7 @@ const NewCollection = () => {
                     (response) => {
                         data.imageUrl = response.data;
                         delete data.imageFiles;
-                        axios.post("/collections", data)
+                        api.post("/collections", data)
                             .then((response) => {
                                 navigate("/");
                             })
@@ -42,8 +43,8 @@ const NewCollection = () => {
                 ).catch((error) => {
                 console.log(error)
             })
-        }else {
-            axios.post("/collections", data)
+        } else {
+            api.post("/collections", data)
                 .then((response) => {
                     navigate("/");
                 })
@@ -62,18 +63,18 @@ const NewCollection = () => {
             <Grid container justifyContent={"center"}>
                 <Grid p={4} m={4} component={Paper} item container xs={5} justifyContent={"space-between"}>
                     <Grid xs={12}>
-                        <Typography variant="h5">
+                        <Typography variant="h5" textAlign="center" mb={3}>
                             Create new collection
                         </Typography>
                     </Grid>
-                    <Grid xs={12}>
+                    <Grid xs={12} mb={2}>
                         <TextField
                             {...register("name")}
-                            label="CollectionCard name"
+                            label="Collection name"
                             fullWidth
                         />
                     </Grid>
-                    <Grid xs={12}>
+                    <Grid xs={12} mb={2}>
                         <FormControl fullWidth>
                             <InputLabel id="select-topic-label">Topic</InputLabel>
                             <Select
@@ -87,7 +88,7 @@ const NewCollection = () => {
                             </Select>
                         </FormControl>
                     </Grid>
-                    <Grid xs={12}>
+                    <Grid xs={12} mb={2}>
                         <TextField
                             multiline
                             rows={10}
@@ -97,20 +98,37 @@ const NewCollection = () => {
                         />
                     </Grid>
                     <Grid xs={12} mb={2}>
-                        <input accept="image/*" multiple={false} type="file" {...register("imageFiles")}/>
+                        <Button
+                            variant="outlined"
+                            component="label"
+                        >
+                            Choose image
+                            <input type="file"
+                                   accept="image/*"
+                                   multiple={false}
+                                   hidden
+                                   onInput={(e) => setFileName(e.target.files[0].name)}
+                                   {...register("imageFiles")}/>
+                        </Button>
+                        <Typography variant="body2" color="gray">{fileName}</Typography>
+                    </Grid>
+                    <Grid xs={12} mb={3}>
+                        <Typography textAlign="center" variant={"h6"}>Add custom fields</Typography>
                     </Grid>
                     <Grid xs={12}>
-                        <Typography mb={3} textAlign="center" variant={"h6"}>Add custom fields</Typography>
+                        {[...Array(count)].map((_, i) =>
+                            <CustomFieldType
+                                registerFunction={register}
+                                index={i}
+                                unregisterFunction={unregister}
+                                key={i}/>
+                        )}
                     </Grid>
                     <Grid xs={12}>
-                        {[...Array(count)].map((_, i) => <CustomFieldType registerFunction={register} index={i}
-                                                                          key={i}/>)}
+                        <Button variant="outlined" onClick={addCustomField}>Add field</Button>
                     </Grid>
-                    <Grid xs={12}>
-                        <Button onClick={addCustomField}>Add field</Button>
-                    </Grid>
-                    <Grid xs={12}>
-                        <Button type="submit">Create</Button>
+                    <Grid xs={12} textAlign="center" mt={3}>
+                        <Button variant="contained" type="submit">Create</Button>
                     </Grid>
                 </Grid>
             </Grid>

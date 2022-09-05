@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
@@ -9,17 +9,27 @@ import {useNavigate} from "react-router-dom";
 import api from "../../http";
 
 const Registration = () => {
+    const [confirmPassword, setConfirmPassword] = useState("");
     const {register, handleSubmit} = useForm();
     const navigate = useNavigate();
 
     const submitHandler = (data) => {
-        api.post("/auth/signup",data)
-            .then(()=>{
-                navigate("/login");
-            })
-            .catch(reason => {
-                alert(reason);
-            })
+        if (data.password === confirmPassword){
+            api.post("/auth/registration", data)
+                .then(() => {
+                    navigate("/login");
+                })
+                .catch(reason => {
+                    if (reason.response.status===400){
+                        console.log(reason)
+                        alert(reason.response.data.message || reason.response.data);
+                    }else {
+                        console.error(reason);
+                    }
+                })
+        }else {
+            alert("Passwords don't match!")
+        }
     }
     return (
         <Container sx={{height: '85%'}}>
@@ -37,12 +47,6 @@ const Registration = () => {
                                 {...register("username")}
                             />
                             <TextField
-                                label="Email"
-                                fullWidth
-                                sx={{mb: 2}}
-                                {...register("email")}
-                            />
-                            <TextField
                                 type="password"
                                 label="Password"
                                 fullWidth
@@ -51,6 +55,7 @@ const Registration = () => {
                             />
                             <TextField type="password"
                                        label="Confirm password"
+                                       onChange={(event)=>setConfirmPassword(event.target.value)}
                                        fullWidth
                                        sx={{mb: 2}}/>
                             <Button

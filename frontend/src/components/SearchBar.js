@@ -13,7 +13,7 @@ const SearchBar = () => {
     const submitHandler = (data) => {
         api.get("/items/search", {params: {"query": data.query}})
             .then((response) => {
-                navigate("/search", {state: {"items": response.data}});
+                navigate("/search", {state: {"items": response.data, "query": data.query}});
             })
     }
 

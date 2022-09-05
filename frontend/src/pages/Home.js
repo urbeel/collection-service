@@ -1,13 +1,16 @@
 import React, {useEffect, useState} from 'react';
 import {Container, Grid, List} from "@mui/material";
-import Item from "../components/Item";
-import Tag from "../components/Tag";
 import Typography from "@mui/material/Typography";
 import CollectionList from "../components/CollectionList";
 import api from "../http";
+import ItemList from "../components/ItemList";
+import TagList from "../components/TagList";
 
 const Home = () => {
         const [topCollections, setTopCollections] = useState([]);
+        const [lastAddedItems, setLastAddedItems] = useState([]);
+        const [tags, setTags] = useState([]);
+
         useEffect(() => {
                 api.get("/collections/top5")
                     .then((response) => {
@@ -15,7 +18,21 @@ const Home = () => {
                     })
                     .catch((reason) => {
                         console.log(reason);
+                    });
+                api.get("/items/last-added")
+                    .then((response) => {
+                        setLastAddedItems(response.data);
                     })
+                    .catch((reason) => {
+                        console.log(reason);
+                    });
+            api.get("/tags")
+                .then((response) => {
+                    setTags(response.data);
+                })
+                .catch((reason) => {
+                    console.log(reason);
+                });
             }, []
         )
 
@@ -24,31 +41,12 @@ const Home = () => {
                 <Grid container columnSpacing={5} marginTop={2}>
                     <Grid item md={6}>
                         <Typography textAlign="center" mb={2} variant='h4'>Last added items</Typography>
-                        <Item itemName='Apple' authorName='Kate' collectionName='fruits'/>
-                        <Item/>
-                        <Item/>
-                        <Item/>
-                        <Item/>
-                        <Item/>
-                        <Item/>
-                        <Item/>
-                        <Item/>
-                        <Item/>
+                        <ItemList items={lastAddedItems}/>
                     </Grid>
                     <Grid container item md={6}>
                         <Grid item md={12}>
                             <List direction="row" spacing={1}>
-                                <Tag/>
-                                <Tag/>
-                                <Tag/>
-                                <Tag/>
-                                <Tag/>
-                                <Tag/>
-                                <Tag/>
-                                <Tag/>
-                                <Tag/>
-                                <Tag/>
-                                <Tag/>
+                              <TagList tags={tags}/>
                             </List>
                         </Grid>
                         <Grid item md={12}>
@@ -57,18 +55,6 @@ const Home = () => {
                                 collections={topCollections}
                                 columns={7}
                             />
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
                         </Grid>
                     </Grid>
                 </Grid>

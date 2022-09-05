@@ -6,7 +6,7 @@ const CustomFieldType = (props) => {
     const register = props.registerFunction;
     const index = props.index;
     return (
-        <Grid container columnSpacing={1} justifyContent={"space-between"}>
+        <Grid container columnSpacing={1} mb={2} justifyContent={"space-between"}>
             <Grid item xs={4}>
                 <FormControl fullWidth>
                     <InputLabel id="select-field-type-label">Field type</InputLabel>

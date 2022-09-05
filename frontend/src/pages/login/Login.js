@@ -4,13 +4,13 @@ import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import {useForm} from "react-hook-form";
-import {useDispatch, useSelector} from "react-redux";
 import {useNavigate} from "react-router-dom";
-import {fetchLogin, selectIsAuth} from "../../redux/slices/authSlice";
 import {Container, Grid} from "@mui/material";
+import api from "../../http";
+import {useDispatch} from "react-redux";
+import {login} from "../../redux/slices/authSlice";
 
 const Login = () => {
-    const isAuth = useSelector(selectIsAuth);
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const {register, handleSubmit, formState: {errors}} = useForm({
@@ -20,22 +20,22 @@ const Login = () => {
         },
     });
 
-    const onSubmit = async (values) => {
-        const data = await dispatch(fetchLogin(values));
-        console.log(data);
-        if (!data.payload) {
-            return alert('Error while login!');
-        }
-        if ('accessToken' in data.payload) {
-            localStorage.setItem("accessToken", data.payload.accessToken);
-            localStorage.setItem("username", data.payload.username);
-        } else {
+    const handleLogin = async (values) => {
+        api.post('/auth/login', values)
+            .then((response) => {
+                dispatch(login({
+                    username: response.data.user.username,
+                    roles: response.data.user.roles,
+                    accessToken: response.data.accessToken,
+                }));
+                sessionStorage.setItem("accessToken", response.data.accessToken);
+                sessionStorage.setItem("username", response.data.user.username);
+                sessionStorage.setItem("roles", response.data.user.roles);
+                navigate("/");
+            }).catch((reason) => {
+            console.error(reason);
             alert('Error while login!');
-        }
-    }
-
-    if (isAuth) {
-        navigate("/");
+        });
     }
 
     return (
@@ -46,7 +46,7 @@ const Login = () => {
                         <Typography textAlign='center' mb={3} variant="h5">
                             LOGIN FORM
                         </Typography>
-                        <form onSubmit={handleSubmit(onSubmit)}>
+                        <form onSubmit={handleSubmit(handleLogin)}>
                             <TextField
                                 label="Username"
                                 sx={{mb: 2}}

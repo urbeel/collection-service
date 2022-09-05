@@ -9,15 +9,16 @@ import Divider from '@mui/material/Divider';
 import {FavoriteBorderOutlined, FavoriteOutlined} from '@mui/icons-material';
 import moment from "moment";
 import api from "../../http";
+import TagList from "../../components/TagList";
+import useAuth from "../../hooks/useAuth";
 
-// const SOCKET_URL = 'http://localhost:8080/ws-message';
-const SOCKET_URL = 'https://urbel-final-backend.herokuapp.com/ws-message';
+const SOCKET_URL = `${process.env.REACT_APP_API_URL}/ws-message`;
 
 const Item = () => {
     const [item, setItem] = useState({});
     const [likes, setLikes] = useState([]);
     const {id} = useParams();
-    const username = localStorage.getItem('username');
+    const {username} = useAuth();
     const [fields, setFields] = useState([]);
     const [comments, setComments] = useState([]);
     const {register, handleSubmit, reset} = useForm();
@@ -25,18 +26,17 @@ const Item = () => {
     useEffect(() => {
         api.get("/items/" + id)
             .then((response) => {
-                console.log(response.data);
                 setItem(response.data);
                 setFields(response.data.fields);
                 setComments(response.data.comments);
             }).catch((reason => {
             console.log(reason);
         }))
-    }, [id])
+    }, [id]);
 
     useEffect(() => {
         downloadLikes();
-    })
+    },[])
 
     const parseDate = (date) => {
         if (moment(date).isValid()) {
@@ -49,20 +49,17 @@ const Item = () => {
             params: {
                 itemId: id,
             }
+        }).then((response) => {
+            setLikes(response.data);
+        }).catch((reason) => {
+            console.error(reason);
         })
-            .then((response) => {
-                setLikes(response.data);
-            })
-            .catch((reason) => {
-                console.error(reason);
-            })
     }
 
     const addComment = (comment) => {
         comment.itemId = id;
         api.post("/comments", comment)
             .then(() => {
-                console.log("Comment successfully added.");
                 reset();
             })
             .catch((reason) => {
@@ -75,7 +72,8 @@ const Item = () => {
     }
 
     const onMessageReceived = (comment) => {
-        if (comment==="updated") {
+        console.log("Message!");
+        if (comment === "updated") {
             downloadLikes();
         } else {
             setComments((comments) => [comment, ...comments]);
@@ -94,17 +92,11 @@ const Item = () => {
     }
 
     const like = () => {
-        api.post("/likes", null, {params: {itemId: id}})
-            .then(() => {
-                // downloadLikes();
-            });
+        api.post("/likes", null, {params: {itemId: id}}).catch(console.error);
     }
 
     const unlike = () => {
-        api.delete("/likes", {params: {itemId: id}})
-            .then(() => {
-                // downloadLikes();
-            });
+        api.delete("/likes", {params: {itemId: id}}).catch(console.error);
     }
 
     return (
@@ -141,6 +133,9 @@ const Item = () => {
                                 )
                                     ;
                             })}
+                            <Grid item md={12} xs={12} mt={2}>
+                                <TagList tags={item.tags}/>
+                            </Grid>
                             <Grid item md={12} xs={12} mt={3}>
                                 <Typography textAlign='end'>
                                     {likes.length}
@@ -175,9 +170,9 @@ const Item = () => {
                     </Grid>
                 </Grid>
                 {
-                    comments.map((comment, index) => {
+                    comments.map((comment) => {
                         return (
-                            <Grid item xs={12} key={index}>
+                            <Grid item xs={12} key={comment.id}>
                                 <Comment
                                     content={comment.content}
                                     author={comment.author}
